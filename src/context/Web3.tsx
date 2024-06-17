@@ -1,62 +1,57 @@
-import { useDeployment, useDeployments } from '@/app/hooks/useDeployment'
-import { chainIcons } from '@/lib/utils'
 import { WALLETCONNECT_PROJECT_ID } from '@/utils/web3'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createWeb3Modal } from '@web3modal/wagmi/react'
 import { defaultWagmiConfig } from '@web3modal/wagmi/react/config'
-import { PropsWithChildren, useMemo } from 'react'
+import { PropsWithChildren, useEffect, useState } from 'react'
 import { State, WagmiProvider, fallback, http } from 'wagmi'
-import { optimismSepolia, sepolia, type Chain } from 'wagmi/chains'
-
+import { optimismSepolia, sepolia, mainnet, zoraSepolia, baseSepolia, base, type Chain } from 'wagmi/chains'
+import getChains from './chains'
+import { Deployment } from '@/utils/types'
+import { useToast } from '@/components/ui/use-toast'
 interface Props extends PropsWithChildren {
   initialState?: State
 }
 
 const queryClient = new QueryClient()
 
+export const ETH_CHAINS = [mainnet, base, zoraSepolia, baseSepolia, sepolia]
+
 export function Web3Provider(props: Props) {
-  const deployments = useDeployments()
-  const deployment = useDeployment()
+  const [deployment, setDeployment] = useState<Deployment | null>(null)
+  const [chains, setChains] = useState<[Chain, ...Chain[]]>([optimismSepolia, sepolia])
+  const { toast } = useToast()
+  useEffect(() => {
+    async function fetchDeployment() {
+      try {
+        const deploymentData = await getChains()
+        setDeployment(deploymentData)
+        setChains([deploymentData.l1, deploymentData.l2])
+      } catch (error) {
+        console.error('Error fetching deployment data:', error)
+        toast({
+          variant: 'destructive',
+          title: 'Error fetching deployment data',
+          description: String(error),
+        })
+      }
+    }
 
-  const config = useMemo(() => {
-    const chains: Chain[] =
-      deployments.length === 0
-        ? [sepolia, optimismSepolia]
-        : Object.values(
-            deployments.reduce((accum, d) => {
-              if (chainIcons[d.l1.id]) {
-                // @ts-expect-error
-                d.l1.iconUrl = chainIcons[d.l1.id]
-              }
-              if (chainIcons[d.l2.id]) {
-                // @ts-expect-error
-                d.l2.iconUrl = chainIcons[d.l2.id]
-              }
+    fetchDeployment()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-              return {
-                ...accum,
-                [d.l1.id]: d.l1,
-                [d.l2.id]: d.l2,
-              }
-            }, {})
-          )
-    const transports = chains.reduce(
-      (accum, chain) => ({
-        ...accum,
-        [chain.id]: fallback(chain.rpcUrls.default.http.map((url) => http(url))),
-      }),
-      {}
-    )
-
-    return defaultWagmiConfig({
-      appName: 'bridgooor',
-      projectId: WALLETCONNECT_PROJECT_ID,
-      // @ts-expect-error
-      chains,
-      transports,
-      ssr: true,
-    })
-  }, [deployments])
+  const config = defaultWagmiConfig({
+    projectId: WALLETCONNECT_PROJECT_ID,
+    chains: chains,
+    metadata: {
+      name: 'bridgooor',
+      description: 'bridging for L2s',
+      url: 'https://bridgooor.vercel.app',
+      icons: [],
+    },
+    ssr: true,
+    enableEmail: true,
+  })
 
   createWeb3Modal({
     wagmiConfig: config,

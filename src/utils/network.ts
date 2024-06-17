@@ -5,8 +5,6 @@ let chains = [mainnet, arbitrum, base, linea, polygon, optimism, scroll] as [Cha
 
 if (process.env.NODE_ENV !== 'production') chains.push(sepolia, hardhat)
 
-export const ETH_CHAINS = chains
-
 export const NETWORK_COLORS = {
   ethereum: {
     color: 'green',

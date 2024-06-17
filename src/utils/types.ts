@@ -6,6 +6,7 @@ export type AddressMap = {
 }
 
 export interface Token {
+  name: string
   address: Address
   symbol: string
   decimals: number
@@ -25,23 +26,15 @@ export interface Deployment {
   name: string
   rpcUrl: string
   chainId: number
-  stack: 'optimism' | 'arbitrum' | 'mainnet'
+  stack: 'optimism' | 'arbitrum'
   dbId: number
-  l1: Chain
-  l2: Chain
-  logoUrl?: string
+  l1: ChainExtended
+  l2: ChainExtended
 }
 
-// type ChainT = {
-//   id: number
-//   nativeCurrency: Token
-//   rpcUrls: [
-//     {
-//       default: { http?: string[] }
-//     },
-//   ]
-//   testnet: boolean
-// }
+export interface ChainExtended extends Chain {
+  logoUrl?: string
+}
 
 export interface OrbitBridgingContracts {
   adminProxy: Address

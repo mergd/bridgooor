@@ -1,26 +1,53 @@
-import { sql } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export const networksTable = sqliteTable('networks', {
   id: integer('id').primaryKey(),
+  logo_uri: text('logo_uri'),
   chain_id: integer('chain_id').notNull(),
-  parent_chain_id: integer('parent_chain_id').notNull(),
+  parent_chain_id: integer('parent_chain_id'),
   type: text('type').notNull(),
-  native_currency: text('native_currency').notNull(),
+  native_currency: text('native_currency')
+    .notNull()
+    .references(() => tokensTable.id),
   name: text('name').notNull(),
   rpc: text('rpc').notNull(),
-  ws: text('ws').notNull(),
+  ws: text('ws'),
   explorer: text('explorer').notNull(),
-  logo_url: text('logo_url').notNull(),
-  icon_url: text('icon_url').notNull(),
-  brand_color: text('brand_color').notNull(),
-  file_optimism_contracts: text('file_optimism_contracts').notNull(),
-  file_optimism_genesis: text('file_optimism_genesis').notNull(),
-  file_optimism_rollup: text('file_optimism_rollup').notNull(),
-  file_arbitrum_core: text('file_arbitrum_core').notNull(),
-  file_arbitrum_chaininfo: text('file_arbitrum_chaininfo').notNull(),
+  file_optimism_contracts: text('file_optimism_contracts'),
+  file_optimism_genesis: text('file_optimism_genesis'),
+  file_optimism_rollup: text('file_optimism_rollup'),
+  file_arbitrum_core: text('file_arbitrum_core'),
+  file_arbitrum_chaininfo: text('file_arbitrum_chaininfo'),
   contracts: text('contracts').notNull(),
 })
+
+export const tokensTable = sqliteTable('tokens', {
+  id: integer('id').primaryKey(),
+  name: text('name').notNull(),
+  symbol: text('symbol').notNull(),
+  logo_uri: text('logo_uri'),
+  decimals: integer('decimals').notNull(),
+})
+
+export const tokenDeployments = sqliteTable('deployments', {
+  id: integer('id').primaryKey(),
+  token_id: integer('token_id')
+    .notNull()
+    .references(() => tokensTable.id),
+  chain_id: integer('chain_id')
+    .notNull()
+    .references(() => networksTable.chain_id),
+  contract_address: text('contract_address').notNull(),
+})
+
+// export const tokenRelations = relations(tokensTable, ({ many }) => ({
+//   deployments: many(tokenDeployments),
+// }))
+
+// export const bridgeTxRelations = relations(networksTable, ({ many }) => ({
+//   tokens: many(bridgeTxTable),
+// }))
 
 export const bridgeTxTable = sqliteTable('bridge_tx', {
   id: integer('id').primaryKey(),

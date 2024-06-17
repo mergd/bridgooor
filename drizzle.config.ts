@@ -3,7 +3,7 @@ import type { Config } from 'drizzle-kit'
 /** @type {import('drizzle-kit').Config} */
 export default {
   out: './migrations',
-  schema: './src/db/models/Schema.ts',
+  schema: 'src/db/models/Schema.ts',
   dialect: 'sqlite',
   driver: 'turso',
   dbCredentials: {
